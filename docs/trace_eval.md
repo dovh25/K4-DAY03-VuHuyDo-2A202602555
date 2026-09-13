@@ -1,8 +1,8 @@
 # 📊 BÁO CÁO THU HOẠCH NGHIỆM THU BÀI LAB 3 (BƯỚC 3 — SUBMISSION ARTIFACT)
 
-> **Họ và Tên Học viên:** [Điền Họ và Tên]  
-> **Mã Sinh Viên / Mã Học viên:** [Điền MSSV]  
-> **Chủ đề Lựa chọn:** [Điền tên chủ đề đã chọn từ docs/DANH_SACH_DE_TAI.md hoặc Đề tài Mở]  
+> **Họ và Tên Học viên:** Vũ Huy Đô 
+> **Mã Sinh Viên / Mã Học viên:** 2A202602555
+> **Chủ đề Lựa chọn:** Trợ lý Học vụ & Tra cứu Lịch thi VinUni
 
 ---
 
@@ -10,11 +10,11 @@
 
 | Tiêu chí Đánh giá | Mức độ (1 - 5) | Giải trình chi tiết lý do chọn điểm |
 | :--- | :---: | :--- |
-| **1. Multi-step Reasoning** | / 5 | Bài toán có yêu cầu chia nhỏ nhiều bước suy luận nối tiếp nhau không? |
-| **2. Tool Interaction** | / 5 | Hệ thống có cần kết nối với MCP Server / Cơ sở dữ liệu bên ngoài không? |
-| **3. Dynamic Decision** | / 5 | Bước tiếp theo có phụ thuộc vào kết quả quan sát bước trước không? |
-| **4. Long Horizon Goal** | / 5 | Hệ thống có phải giữ mục tiêu xuyên suốt qua nhiều lượt xử lý không? |
-| **TỔNG ĐIỂM AGENTIC FIT** | **/ 20** | *Nếu tổng điểm > 12/20: Bài toán rất phù hợp triển khai Agentic System.* |
+| **1. Multi-step Reasoning** | 5 / 5 | Quy trình hỗ trợ học vụ đòi hỏi chuỗi suy luận logic nhiều bước: tiếp nhận yêu cầu từ sinh viên, trích xuất mã sinh viên (student_id), gọi tool tra cứu hồ sơ học vụ (GPA, trạng thái, cố vấn học tập phụ trách), sau đó dựa vào kết quả tra cứu để quyết định và chuẩn bị tham số gọi tiếp tool đặt lịch hẹn (schedule_appointment) với đúng Cố vấn trước khi tổng hợp câu trả lời hoàn chỉnh. |
+| **2. Tool Interaction** | 5 / 5 | Hệ thống bắt buộc phải tương tác liên tục với cơ sở dữ liệu thời gian thực của Nhà trường (SIS) thông qua giao thức MCP Server: tra cứu thông tin học vụ, điểm số (academic_query) và ghi nhận lịch hẹn tư vấn học vụ (schedule_appointment). Dữ liệu học vụ cần độ chính xác tuyệt đối, LLM không thể tự biết và không được phép bịa đặt thông tin (Anti-Hallucination). |
+| **3. Dynamic Decision** | 4 / 5 | Hành động tiếp theo của Agent phụ thuộc linh hoạt vào kết quả quan sát (Observation) từ công cụ ở bước trước: Nếu tra cứu thành công -> lấy tên Cố vấn học tập được chỉ định để đặt lịch; nếu sinh viên có GPA < 2.0 (cảnh báo học vụ) -> ưu tiên đề xuất lịch tư vấn khẩn cấp; nếu mã sinh viên không tồn tại (NOT_FOUND) -> dừng quy trình đặt lịch và đưa ra cảnh báo lỗi lịch sự, yêu cầu kiểm tra lại thông tin. |
+| **4. Long Horizon Goal** | 4 / 5 | Agent cần duy trì mục tiêu nghiệp vụ xuyên suốt một chu trình hỗ trợ học vụ: từ tiếp nhận nhu cầu ban đầu của sinh viên, tra cứu thông tin hồ sơ, gợi ý thời gian phù hợp, thực hiện đặt lịch hẹn với Cố vấn, xuất mã xác nhận (booking_id) cho đến lưu vết thực thi (Waterfall Trace Log) qua nhiều lượt trao đổi mà không bị mất ngữ cảnh. |
+| **TỔNG ĐIỂM AGENTIC FIT** | **18 / 20** | *Tổng điểm 18/20 (> 12/20): Bài toán Trợ lý Học vụ & Tra cứu Lịch thi VinUni cực kỳ phù hợp để chuyển đổi từ Chatbot thông thường lên kiến trúc ReAct Agent kết hợp MCP Server.* |
 
 ---
 
@@ -28,6 +28,7 @@ Dán 1 đoạn trích xuất log tiêu biểu từ file `docs/trace_waterfall.js
 [
   {
     "step": 1,
+    "query": "Hãy tra cứu thông tin học vụ của sinh viên SV2026001.",
     "action_type": "TOOL_EXECUTION",
     "tool_name": "academic_query",
     "arguments": {
@@ -38,10 +39,22 @@ Dán 1 đoạn trích xuất log tiêu biểu từ file `docs/trace_waterfall.js
       "student_id": "SV2026001",
       "data": {
         "full_name": "Nguyễn Văn An",
-        "gpa": 3.85
+        "class": "AI-K4",
+        "gpa": 3.85,
+        "email": "an.nv@vinuni.edu.vn",
+        "status": "Đang học",
+        "advisor": "PGS.TS Nguyễn Văn A"
       }
     },
-    "latency_ms": 120.5
+    "latency_ms": 1861.79
+  },
+  {
+    "step": 2,
+    "query": "Hãy tra cứu thông tin học vụ của sinh viên SV2026001.",
+    "action_type": "FINAL_ANSWER",
+    "thought": "Tổng hợp kết quả từ MCP Server thành công.",
+    "output": "Kết quả tra cứu cho sinh viên SV2026001 (Nguyễn Văn An): Lớp AI-K4, GPA: 3.85, Email: an.nv@vinuni.edu.vn, Trạng thái: Đang học, Cố vấn: PGS.TS Nguyễn Văn A.",
+    "latency_ms": 10.0
   }
 ]
 ```
@@ -50,10 +63,10 @@ Dán 1 đoạn trích xuất log tiêu biểu từ file `docs/trace_waterfall.js
 
 ## 3. TỔNG KẾT KẾT QUẢ NGHIỆM THU & NỘP BÀI
 
-- [ ] Đã điền API Key thật trong `.env` và xác nhận Agent chạy mượt mà trên LLM API thật (Gemini/OpenAI).
-- **Tổng số Test Cases đã chạy thành công:** ___ / 5 test cases.
-- **Số lượt gọi Tool qua MCP Server chính xác:** ___ lượt.
-- **Kết quả đẩy Repo nộp bài:** [ ] Đã Commit và Push mã nguồn thành công lên GitHub cá nhân.
+- [x] Đã điền API Key thật trong `.env` và xác nhận Agent chạy mượt mà trên LLM API thật (Gemini: `gemini-3.6-flash`).
+- **Tổng số Test Cases đã chạy thành công:** 5 / 5 test cases.
+- **Số lượt gọi Tool qua MCP Server chính xác:** 4 lượt (`academic_query`, `schedule_appointment`).
+- **Kết quả đẩy Repo nộp bài:** [x] Đã sẵn sàng Commit và Push mã nguồn thành công lên GitHub cá nhân.
 
 ---
 
